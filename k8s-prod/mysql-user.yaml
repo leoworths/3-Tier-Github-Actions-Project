@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mysql-user
+  namespace: prod
+spec:
+  template:
+    metadata:
+      annotations:
+        vault.hashicorp.com/role: "vault-role"
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/agent-pre-populate-only: "true"   # ✅ Fix: run Vault Agent as init container
+        vault.hashicorp.com/agent-inject-secret-db-cred: "secret/data/mysql"
+        vault.hashicorp.com/agent-inject-template-db-cred: |
+          {{- with secret "secret/data/mysql" -}}
+          export MYSQL_ROOT_PASSWORD="{{ .Data.data.MYSQL_ROOT_PASSWORD }}"
+          export DB_USER="{{ .Data.data.MYSQL_USER }}"
+          export DB_PASSWORD="{{ .Data.data.MYSQL_PASSWORD }}"
+          {{- end }}
+        vault.hashicorp.com/agent-inject-configMap: "vault-ca-cert"
+        vault.hashicorp.com/agent-inject-mount: "vault/ca"
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: vault-auth
+      containers:
+        - name: mysql-user
+          image: mysql:8.0
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "Waiting for Vault secrets..."
+              while [ ! -f /vault/secrets/db-cred ]; do sleep 1; done
+              source /vault/secrets/db-cred
+              echo "Waiting for MySQL secrets..."
+              until mysql -h mysql-svc -u root -p"$MYSQL_ROOT_PASSWORD" -e 'exit'; do sleep 1; done
+              echo "Creating database user..."
+              mysql -h mysql-svc -u root -p"$MYSQL_ROOT_PASSWORD" -e "
+                CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD';
+                GRANT ALL PRIVILEGES ON *.* TO '$DB_USER'@'%' WITH GRANT OPTION;
+                FLUSH PRIVILEGES;"
+          volumeMounts:
+            - name: vault-ca
+              mountPath: /vault/ca
+              readOnly: true
+      volumes:
+        - name: vault-ca
+          configMap:
+            name: vault-ca-cert
+
+

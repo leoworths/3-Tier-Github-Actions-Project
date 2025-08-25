@@ -1,0 +1,148 @@
+global:
+  enabled: true
+  tlsDisable: false
+  resource:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+injector:
+  enabled: true
+  image:
+    repository: "hashicorp/vault-k8s"
+    tag: "latest"
+
+
+server:
+  dataStorage:
+    enabled: true
+    storageClass: ebs-csi
+
+  image:
+    repository: "hashicorp/vault"
+    tag: "latest"
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  
+  extraEnvironmentVars:
+    VAULT_TLSCERT: "/vault/tls/tls.crt"
+    VAULT_TLSKEY: "/vault/tls/tls.key"
+    VAULT_CACERT: "/vault/tls/ca.crt"
+    
+  extraSecretEnvironmentVars:
+    - envName: AWS_ACCESS_KEY_ID
+      secretName: aws-creds
+      secretKey: AWS_ACCESS_KEY_ID
+    - envName: AWS_SECRET_ACCESS_KEY
+      secretName: aws-creds
+      secretKey: AWS_SECRET_ACCESS_KEY
+    - envName: AWS_KMS_KEY_ID
+      secretName: aws-creds
+      secretKey: AWS_KMS_KEY_ID
+
+  readinessProbe:
+    enabled: true
+    path: "/v1/sys/health?standbyok=true&sealedcode=204&uninitcode=204"
+
+  livenessProbe:
+    enabled: true
+    path: "/v1/sys/health?standbyok=true"
+    initialDelaySeconds: 120
+
+  volumes:
+    - name: vault-tls-cert
+      secret:
+        defaultMode: 420
+        secretName: vault-tls-ha
+
+  volumeMounts:
+    - mountPath: "/vault/tls"
+      name: vault-tls-cert
+      readOnly: true
+
+  standalone:
+    enabled: false
+
+  affinity: ""
+
+  ha:
+    enabled: true
+    replicas: 3
+    raft:
+      enabled: true
+      setNodeId: true
+      config: |
+        cluster_name = "vault-cluster"
+        ui = true
+        listener "tcp" {
+          tls_disable = 0
+          address = "[::]:8200"
+          cluster_address = "[::]:8201"
+          tls_cert_file = "/vault/tls/tls.crt"
+          tls_key_file  = "/vault/tls/tls.key"
+          tls_client_ca_file = "/vault/tls/ca.crt"
+        }
+        
+        storage "raft" {
+          path = "/vault/data"
+
+          retry_join {
+            leader_api_addr = "https://vault-0.vault-internal:8200"
+            leader_tls_servername = "vault-0.vault-internal"
+            leader_ca_cert_file = "/vault/tls/ca.crt"
+          }
+          retry_join {
+            leader_api_addr = "https://vault-1.vault-internal:8200"
+            leader_tls_servername = "vault-1.vault-internal"
+            leader_ca_cert_file = "/vault/tls/ca.crt"
+          }
+          retry_join {
+            leader_api_addr = "https://vault-2.vault-internal:8200"
+            leader_tls_servername = "vault-2.vault-internal"
+            leader_ca_cert_file = "/vault/tls/ca.crt"
+          }
+        }
+
+        seal "awskms" {
+          region = "us-east-1"
+          kms_key_id = "${AWS_KMS_KEY_ID}"
+        }
+        disable_mlock = true
+        service_registration "kubernetes" {}
+
+  ui:
+    enabled: true
+    service:
+      enabled: true
+      type: ClusterIP  
+      name: vault
+      ports:
+        - port: 8200
+          targetPort: 8200
+        - port: 8201
+          targetPort: 8201
+      selector:
+        app.kubernetes.io/name: vault
+
+tls:
+  enabled: true
+  cert_file: /vault/tls/tls.crt  
+  key_file: /vault/tls/tls.key 
+  ca_file: /vault/tls/ca.crt
+  secretName: vault-tls-ha
+
+persistence:
+  enabled: true
+  size: 2Gi
+  storageClass: ebs-csi
+  accessModes:
+    - ReadWriteOnce

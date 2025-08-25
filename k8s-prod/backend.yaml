@@ -1,0 +1,107 @@
+#backend yaml with vault annotations
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: prod
+  labels:
+    app: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+      annotations:
+        vault.hashicorp.com/role: "vault-role"
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/agent-inject-secret-db-cred: "secret/data/mysql"
+        vault.hashicorp.com/agent-inject-template-db-cred: |
+          {{- with secret "secret/data/mysql" -}}
+          export DB_USER="{{ .Data.data.MYSQL_USER }}"
+          export DB_PASSWORD="{{ .Data.data.MYSQL_PASSWORD }}"
+          {{- end }}
+        vault.hashicorp.com/agent-inject-secret-app-secret: "secret/data/backend"
+        vault.hashicorp.com/agent-inject-template-app-secret: |
+          {{- with secret "secret/data/backend" -}}
+          export JWT_SECRET="{{ .Data.data.JWT_SECRET }}"
+          {{- end }}
+        vault.hashicorp.com/agent-inject-configMap: "vault-ca-cert"
+        vault.hashicorp.com/agent-inject-mount: "vault/ca"
+    spec:
+      serviceAccountName: vault-auth
+      containers:
+        - name: backend
+          image: docker.io/leoworths/backend:v1.0.4
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "Waiting for Vault secrets..."
+              while [ ! -f /vault/secrets/db-cred ] || [ ! -f /vault/secrets/app-secret ]; do sleep 1; done
+              echo "Vault secrets ready!"
+              source /vault/secrets/db-cred
+              source /vault/secrets/app-secret
+              echo "Waiting for DB..."
+              until mysqladmin ping -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" --silent; do sleep 1; done
+              echo "Starting backend..."
+              exec node app.js
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: DB_HOST
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: DB_NAME
+            - name: RESET_ADMIN_PASS
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: RESET_ADMIN_PASS
+          volumeMounts:
+            - name: vault-ca
+              mountPath: /vault/ca
+              readOnly: true
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: vault-ca
+          configMap:
+            name: vault-ca-cert
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+  namespace: prod
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 5000
+      targetPort: 5000
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: prod
+data:
+  DB_HOST: mysql-svc
+  DB_NAME: crud_app
+  RESET_ADMIN_PASS: 'true'

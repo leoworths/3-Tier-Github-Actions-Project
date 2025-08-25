@@ -1,0 +1,138 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  namespace: prod
+  labels:
+    app: mysql
+spec: 
+  serviceName: mysql-svc
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+      annotations:
+        vault.hashicorp.com/role: "vault-role"
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/agent-inject-secret-db-cred: "secret/data/mysql"
+        vault.hashicorp.com/agent-inject-template-db-cred: |
+          {{- with secret "secret/data/mysql" -}}
+          export MYSQL_ROOT_PASSWORD="{{ .Data.data.MYSQL_ROOT_PASSWORD }}"
+          {{- end }}
+        vault.hashicorp.com/agent-inject-configMap: "vault-ca-cert"
+        vault.hashicorp.com/agent-inject-mount: "vault/ca"
+    spec:
+      serviceAccountName: vault-auth
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
+            - name: initdb
+              mountPath: /docker-entrypoint-initdb.d
+            - name: vault-ca
+              mountPath: /vault/ca
+              readOnly: true 
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "Waiting for Vault secrets..."
+              while [ ! -f /vault/secrets/db-cred ]; do sleep 1; done
+              source /vault/secrets/db-cred
+              echo "Starting MySQL..."
+              exec docker-entrypoint.sh mysqld
+          readinessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "127.0.0.1"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5 
+          livenessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "127.0.0.1"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5    
+      volumes:
+        - name: initdb
+          configMap:
+            name: mysql-initdb-config
+            items:
+              - key: init.sql
+                path: init.sql
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+            claimName: mysql-pvc
+        - name: vault-ca
+          configMap:
+            name: vault-ca-cert
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: prod
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: ebs-csi
+          
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-svc
+  namespace: prod
+spec:
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+      targetPort: 3306
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  namespace: prod
+  labels:
+    app: mysql
+data:
+  MYSQL_DATABASE: "crud_app"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb-config
+  namespace: prod
+  labels:
+    app: mysql
+data:
+  init.sql: |
+    CREATE DATABASE IF NOT EXISTS crud_app;
+    USE crud_app;
+    CREATE TABLE IF NOT EXISTS users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(50) NOT NULL,
+      email VARCHAR(50) NOT NULL,
+      password VARCHAR(50) NOT NULL
+    );

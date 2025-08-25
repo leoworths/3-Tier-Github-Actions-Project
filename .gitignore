@@ -1,0 +1,40 @@
+
+/.pnp
+
+
+#terraform
+.terraform/*
+.terraform
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfvars
+.terraform.lock.hcl*
+*.tfstate
+*.tfstate.backup
+*.tfvars
+
+docker-compose.yaml
+
+# Ignore PnP JS file
+.pnp.js
+# Ignore coverage reports
+/coverage
+# Ignore build artifacts
+/dist
+# Ignore IDE files
+.idea
+.vscode
+# Ignore temporary files
+*.tmp
+# Ignore log files
+*.log
+# Ignore environment files
+*.env
+# Ignore npm-debug.log
+npm-debug.log
+# Ignore node_modules
+node_modules/*
+# Ignore .DS_Store
+.DS_Store
+# Ignore .env files
+vault.key 
