@@ -319,7 +319,37 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.TOKEN }}
+      - name: Set up Git config
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'actions@github.com'
+
+      - name: Update K8s Frontend Image
+        env:
+          NEW_NAME: ${{ needs.docker-build-frontend.outputs.image_name }}
+          NEW_TAG: ${{ needs.docker-build-frontend.outputs.image_tag }}
+        run: |
+          sed -i "s|image:.*|image: $NEW_NAME:$NEW_TAG|g" k8s-prod/frontend.yaml
+
+      - name: Update K8s Backend Image
+        env:
+          NEW_NAME: ${{ needs.docker-build-backend.outputs.image_name }}
+          NEW_TAG: ${{ needs.docker-build-backend.outputs.image_tag }}
+        run: |
+          sed -i "s|image:.*|image: $NEW_NAME:$NEW_TAG|g" k8s-prod/backend.yaml
+
+      - name: Commit and push changes
+        run: |
+          git add k8s-prod/frontend.yaml k8s-prod/backend.yaml
+          git commit -m "ci: Update image tags" || echo "No changes to commit"
+          git push origin main
+
+
+
+
+
+
       - name: Update Frontend Image in K8s Manifest
         run: |
           sed -i "s|image: .*|image: ${{ needs.docker-build-frontend.outputs.image_name }}:${{ needs.docker-build-frontend.outputs.image_tag }}|g" k8s-prod/frontend.yaml
@@ -331,5 +361,5 @@ jobs:
           git config --global user.name 'github-actions'
           git config --global user.email 'actions@github.com'
           git add k8s-prod/frontend.yaml k8s-prod/backend.yaml
-          git commit -m "Update frontend and backend images" 
+          git commit -m "Update frontend and backend images"
           git push origin main
