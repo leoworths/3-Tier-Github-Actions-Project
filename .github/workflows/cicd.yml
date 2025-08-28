@@ -110,7 +110,7 @@ jobs:
           args: >
             -Dsonar.projectKey=NodeJS-frontend
             -Dsonar.projectName=NodeJS-frontend
-            -Dsonar.sources=.
+            -Dsonar.sources=client
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
 
       - name: SonarQube Quality Gate Check
@@ -142,7 +142,7 @@ jobs:
           args: >
             -Dsonar.projectKey=NodeJS-backend
             -Dsonar.projectName=NodeJS-backend
-            -Dsonar.sources=.
+            -Dsonar.sources=api
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
       - name: SonarQube Quality Gate Check
         id: sonarqube-quality-gate-check
