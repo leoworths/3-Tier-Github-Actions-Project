@@ -159,7 +159,7 @@ jobs:
         run: |
           cd client
           npm ci
-          npm run build
+          
       - name: Upload Frontend Artifacts
         uses: actions/upload-artifact@v4
         with:
