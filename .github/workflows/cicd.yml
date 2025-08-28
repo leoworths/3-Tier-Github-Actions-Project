@@ -216,7 +216,7 @@ jobs:
         id: build
         run: |
           echo "image_name=${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
-          echo "image_tag=$(echo ${{ steps.meta.outputs.tags }} | head -n 1)" >> $GITHUB_OUTPUT
+          echo "image_tag=${{env.IMAGE_TAG}}" >> $GITHUB_OUTPUT
 #build backend docker image and push to dockerhub
   docker-build-backend:
     runs-on: ubuntu-latest
