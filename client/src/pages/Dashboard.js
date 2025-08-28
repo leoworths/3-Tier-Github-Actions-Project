@@ -1,4 +1,3 @@
-// src/pages/Dashboard.js
 import React, { useContext, useEffect, useState } from 'react';
 import axios from '../axios';
 import { AuthContext } from '../context/AuthContext';
@@ -8,10 +7,23 @@ function Dashboard() {
   const [users, setUsers] = useState([]);
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
 
+  // ✅ Removed fetchUsers from outside useEffect
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    // ✅ Define fetchUsers inside useEffect
+    const fetchUsersEffect = async () => {
+      try {
+        const res = await axios.get('/users', {
+          headers: { Authorization: token },
+        });
+        setUsers(res.data);
+      } catch (err) {
+        console.error('Fetch users failed:', err);
+      }
+    };
+    fetchUsersEffect();
+  }, [token]); // ✅ Added token as dependency
 
+  // ✅ Keep fetchUsers function for manual calls (e.g. after adding user)
   const fetchUsers = async () => {
     try {
       const res = await axios.get('/users', {
@@ -36,7 +48,7 @@ function Dashboard() {
         { headers: { Authorization: token } }
       );
       setFormData({ name: '', email: '', password: '' });
-      fetchUsers();
+      fetchUsers(); // ✅ Manually call fetchUsers here to refresh
     } catch (err) {
       console.error('Error adding user:', err);
       alert('User creation failed');
@@ -113,4 +125,3 @@ function Dashboard() {
 }
 
 export default Dashboard;
-
