@@ -353,3 +353,4 @@ jobs:
           git add k8s-prod/frontend.yaml k8s-prod/backend.yaml
           git commit -m "Update frontend and backend images"
           git push origin main
+#Deploy to Kubernetes cluster
