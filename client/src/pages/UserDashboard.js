@@ -12,17 +12,29 @@ function UserDashboard() {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  // ✅ ESLint-safe useEffect with internal fetchUsers
   useEffect(() => {
+    const fetchUsersEffect = () => {
+      axios
+        .get('/users')
+        .then(res => setUsers(res.data))
+        .catch(err => {
+          console.error('Fetch Error:', err);
+          if (err.response?.status === 401) logout();
+        });
+    };
+
     if (!user) {
       navigate('/login');
     } else {
-      fetchUsers();
+      fetchUsersEffect();
     }
-  }, [user, navigate]);
+  }, [user, navigate, logout]); // ✅ All dependencies listed
 
+  // ✅ External fetchUsers for reuse (create/update/delete)
   const fetchUsers = () => {
     axios
-      .get('/users') // ✅ Fixed
+      .get('/users')
       .then(res => setUsers(res.data))
       .catch(err => {
         console.error('Fetch Error:', err);
@@ -32,7 +44,7 @@ function UserDashboard() {
 
   const handleCreate = (userData) => {
     axios
-      .post('/users', userData) // ✅ Fixed
+      .post('/users', userData)
       .then(() => {
         fetchUsers();
         setEditingUser(null);
@@ -43,7 +55,7 @@ function UserDashboard() {
   const handleUpdate = (id, userData) => {
     if (user?.role !== 'admin') return;
     axios
-      .put(`/users/${id}`, userData) // ✅ Fixed
+      .put(`/users/${id}`, userData)
       .then(() => {
         fetchUsers();
         setEditingUser(null);
@@ -54,7 +66,7 @@ function UserDashboard() {
   const handleDelete = (id) => {
     if (user?.role !== 'admin') return;
     axios
-      .delete(`/users/${id}`) // ✅ Fixed
+      .delete(`/users/${id}`)
       .then(fetchUsers)
       .catch(err => console.error('Delete Error:', err));
   };
@@ -113,6 +125,7 @@ function UserDashboard() {
           ))}
         </tbody>
       </table>
+
       <button
         className="fab"
         onClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth' })}
