@@ -101,7 +101,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: SonarQube Frontend Scan 
-        uses: SonarSource/sonarqube-scan-action@master
+        uses: SonarSource/sonarqube-scan-action@v5.3.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
@@ -115,6 +115,9 @@ jobs:
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.qualitygate.wait=true
             -Dsonar.qualitygate.timeout=300
+      - name: Cleanup SonarQube scanner artifacts
+        run: rm -rf .scannerwork || true
+
 #sonarqube scan for backend
   sonarqube-scan-backend:
     runs-on: ubuntu-latest
@@ -125,7 +128,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: SonarQube Backend Scan 
-        uses: SonarSource/sonarqube-scan-action@master
+        uses: SonarSource/sonarqube-scan-action@v5.3.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
