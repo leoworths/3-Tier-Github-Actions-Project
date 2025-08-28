@@ -106,12 +106,14 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
         with:
-          projectBaseDir: .
+          projectBaseDir: ./client
           args: >
             -Dsonar.projectKey=NodeJS-frontend
             -Dsonar.projectName=NodeJS-frontend
-            -Dsonar.sources=client
+            -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.timeout=300
 
       - name: SonarQube Quality Gate Check
         id: sonarqube-quality-gate-check
@@ -138,26 +140,14 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
         with:
-          projectBaseDir: .
+          projectBaseDir: ./api
           args: >
             -Dsonar.projectKey=NodeJS-backend
             -Dsonar.projectName=NodeJS-backend
-            -Dsonar.sources=api
+            -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
-            -Dsonar.tests=api
-            -Dsonar.test.inclusions=**/api/**
             -Dsonar.qualitygate.wait=true
-            -Dsonar.qualitygate.timeout=600
-      - name: SonarQube Quality Gate Check
-        id: sonarqube-quality-gate-check
-        uses: SonarSource/sonarqube-quality-gate-action@master
-        with:
-          pollingTimeoutSec: 600  # Adjust the timeout as needed
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
-      - name: Show Quality Gate Result
-        run: echo ${{ steps.sonarqube-quality-gate-check.outputs.status }}
+            -Dsonar.qualitygate.timeout=300
 #Build Artifacts
   build-artifacts:
     runs-on: ubuntu-latest
