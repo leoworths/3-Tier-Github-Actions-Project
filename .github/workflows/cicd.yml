@@ -112,7 +112,9 @@ jobs:
             -Dsonar.projectName=NodeJS-frontend
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
-#Quality gate check
+      - name: List report path
+        run: | 
+          ls -al client/.scannerwork
       - name: SonarQube Quality Gate Check
         id: sonarqube-quality-gate-check
         uses: SonarSource/sonarqube-quality-gate-action@master
@@ -144,7 +146,9 @@ jobs:
             -Dsonar.projectName=NodeJS-backend
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
-#Quality gate check
+      - name: List report path
+        run: | 
+          ls -al api/.scannerwork
       - name: SonarQube Quality Gate Check
         id: sonarqube-quality-gate-check
         uses: SonarSource/sonarqube-quality-gate-action@master
