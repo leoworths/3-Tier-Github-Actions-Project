@@ -112,21 +112,8 @@ jobs:
             -Dsonar.projectName=NodeJS-frontend
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
-      - name: Upload Frontend Scan Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: sonarqube-frontend-scan-report
-          path: client/.scannerwork
+
 #Quality gate check
-  quality-gate-frontend:
-    runs-on: ubuntu-latest
-    needs: sonarqube-scan-frontend
-    steps:
-      - name: Download Frontend Scan Report
-        uses: actions/download-artifact@v4
-        with:
-          name: sonarqube-frontend-scan-report
-          path: client/.scannerwork
       - name: SonarQube Quality Gate Check
         id: sonarqube-quality-gate-check
         uses: SonarSource/sonarqube-quality-gate-action@master
@@ -158,21 +145,7 @@ jobs:
             -Dsonar.projectName=NodeJS-backend
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
-      - name: Upload Backend Scan Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: sonarqube-backend-scan-report
-          path: api/.scannerwork
 #Quality gate check
-  quality-gate-backend:
-    runs-on: ubuntu-latest
-    needs: sonarqube-scan-backend
-    steps:
-      - name: Download Backend Scan Report
-        uses: actions/download-artifact@v4
-        with:
-          name: sonarqube-backend-scan-report
-          path: api/.scannerwork
       - name: SonarQube Quality Gate Check
         id: sonarqube-quality-gate-check
         uses: SonarSource/sonarqube-quality-gate-action@master
