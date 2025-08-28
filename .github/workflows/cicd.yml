@@ -175,7 +175,7 @@ jobs:
       IMAGE_TAG: ${{ github.sha }}
       IMAGE_NAME: ${{ vars.DOCKERHUB_USERNAME }}/${{github.event.repository.name }}-frontend
     outputs:
-      image_name: ${{ env.IMAGE_NAME }}
+      image_name: ${{ steps.build.outputs.image_name }}
       image_tag: ${{ steps.build.outputs.image_tag }}
 
     steps:
@@ -185,7 +185,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-artifacts
-          path: client/dist 
+          path: client/build
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
       - name: Setup Docker Buildx
@@ -225,7 +225,7 @@ jobs:
       IMAGE_TAG: ${{ github.sha }}
       IMAGE_NAME: ${{ vars.DOCKERHUB_USERNAME }}/${{github.event.repository.name }}-backend
     outputs:
-      image_name: ${{ env.IMAGE_NAME }}
+      image_name: ${{ steps.build.outputs.image_name }}
       image_tag: ${{ steps.build.outputs.image_tag }}
 
     steps:
@@ -331,5 +331,5 @@ jobs:
           git config --global user.name 'github-actions'
           git config --global user.email 'actions@github.com'
           git add k8s-prod/frontend.yaml k8s-prod/backend.yaml
-          git commit -m "Update frontend and backend images"
+          git commit -m "Update frontend and backend images" 
           git push origin main
