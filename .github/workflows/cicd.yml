@@ -112,7 +112,6 @@ jobs:
             -Dsonar.projectName=NodeJS-frontend
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
-
 #Quality gate check
       - name: SonarQube Quality Gate Check
         id: sonarqube-quality-gate-check
@@ -158,7 +157,7 @@ jobs:
 #Build Artifacts
   build-artifacts:
     runs-on: ubuntu-latest
-    needs: [quality-gate-frontend, quality-gate-backend]
+    needs: [sonarqube-scan-frontend, sonarqube-scan-backend]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
