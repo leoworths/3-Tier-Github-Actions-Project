@@ -114,17 +114,6 @@ jobs:
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
             -Dsonar.qualitygate.wait=true
             -Dsonar.qualitygate.timeout=300
-
-      - name: SonarQube Quality Gate Check
-        id: sonarqube-quality-gate-check
-        uses: SonarSource/sonarqube-quality-gate-action@master
-        with:
-          pollingTimeoutSec: 600  # Adjust the timeout as needed
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
-      - name: Show Quality Gate Result
-        run: echo ${{ steps.sonarqube-quality-gate-check.outputs.status }}
 #sonarqube scan for backend
   sonarqube-scan-backend:
     runs-on: ubuntu-latest
