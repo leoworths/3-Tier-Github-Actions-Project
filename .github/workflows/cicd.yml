@@ -112,14 +112,13 @@ jobs:
             -Dsonar.projectName=NodeJS-frontend
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
-            -Dsonar.working.directory=./.scannerwork
 #Quality gate check
       - name: SonarQube Quality Gate Check
         id: sonarqube-quality-gate-check
         uses: SonarSource/sonarqube-quality-gate-action@master
         with:
           pollingTimeoutSec: 600  # Adjust the timeout as needed
-          scanMetadataReportFile: .scannerwork/report-task.txt
+          scanMetadataReportFile: client/.scannerwork/report-task.txt
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
@@ -145,14 +144,13 @@ jobs:
             -Dsonar.projectName=NodeJS-backend
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
-            -Dsonar.working.directory=./.scannerwork
 #Quality gate check
       - name: SonarQube Quality Gate Check
         id: sonarqube-quality-gate-check
         uses: SonarSource/sonarqube-quality-gate-action@master
         with:
           pollingTimeoutSec: 600  # Adjust the timeout as needed
-          scanMetadataReportFile: .scannerwork/report-task.txt
+          scanMetadataReportFile: api/.scannerwork/report-task.txt
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
