@@ -112,6 +112,7 @@ jobs:
             -Dsonar.projectName=NodeJS-frontend
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.qualitygate.wait=true
             -Dsonar.qualitygate.timeout=300
 #sonarqube scan for backend
@@ -135,6 +136,7 @@ jobs:
             -Dsonar.projectName=NodeJS-backend
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
             -Dsonar.qualitygate.wait=true
             -Dsonar.qualitygate.timeout=300
 #Build Artifacts
