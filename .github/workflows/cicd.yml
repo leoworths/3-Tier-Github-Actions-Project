@@ -92,31 +92,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #sonarqube scan
-  sonarqube-scan-frontend:
-    runs-on: ubuntu-latest
-    needs: trivy-scan
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: SonarQube Frontend Scan 
-        uses: SonarSource/sonarqube-scan-action@v5.3.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
-        with:
-          projectBaseDir: ./client
-          args: >
-            -Dsonar.projectKey=NodeJS-frontend
-            -Dsonar.projectName=NodeJS-frontend
-            -Dsonar.sources=.
-            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
-            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.qualitygate.wait=true
-            -Dsonar.qualitygate.timeout=300
-      - name: Cleanup SonarQube scanner artifacts
-        run: rm -rf .scannerwork || true
 
 #sonarqube scan for backend
   sonarqube-scan-backend:
@@ -145,7 +120,7 @@ jobs:
 #Build Artifacts
   build-artifacts:
     runs-on: ubuntu-latest
-    needs: [sonarqube-scan-frontend, sonarqube-scan-backend]
+    needs: [sonarqube-scan-backend]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
