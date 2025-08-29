@@ -116,8 +116,20 @@ jobs:
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.qualitygate.wait=true
-            -Dsonar.qualitygate.timeout=300
+#quality gate check
+      - name: SonarQube Quality Gate check
+        id: sonarqube-quality-gate-check
+        uses: SonarSource/sonarqube-quality-gate-action@master
+        with:
+          pollingTimeoutSec: 600
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+      - name: Fail the job if Quality Gate is not passed
+        if: steps.sonarqube-quality-gate-check.outputs.status != 'PASSED'
+        run: |
+          echo "Quality Gate is not passed. Failing the job."
+          exit 1
 #sonarqube scan for backend
   sonarqube-scan-backend:
     runs-on: ubuntu-latest
@@ -140,8 +152,20 @@ jobs:
             -Dsonar.sources=.
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.qualitygate.wait=true
-            -Dsonar.qualitygate.timeout=300
+#quality gate check
+      - name: SonarQube Quality Gate check
+        id: sonarqube-quality-gate-check
+        uses: SonarSource/sonarqube-quality-gate-action@master
+        with:
+          pollingTimeoutSec: 600
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+      - name: Fail the job if Quality Gate is not passed
+        if: steps.sonarqube-quality-gate-check.outputs.status != 'PASSED'
+        run: |-
+          echo "Quality Gate is not passed. Failing the job."
+          exit 1
 #Build Artifacts
   build-artifacts:
     runs-on: ubuntu-latest
@@ -311,7 +335,7 @@ jobs:
 #Update k8s manifests 
   update-k8s-manifests:
     runs-on: ubuntu-latest
-    needs: [docker-build-frontend, docker-build-backend]
+    needs: [trivy-scan-frontend, trivy-scan-backend]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Checkout code
