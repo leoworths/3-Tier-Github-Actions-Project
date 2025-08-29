@@ -126,8 +126,10 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+      - name: Show Quality Gate Status
+        run: echo "Quality Gate status is ${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }}"
       - name: Fail the job if Quality Gate is not passed
-        if: steps.sonarqube-quality-gate-check.outputs.status != 'PASSED'
+        if: steps.sonarqube-quality-gate-check.outputs.quality-gate-status != 'PASSED'
         run: |
           echo "Quality Gate is not passed. Failing the job."
           exit 1
@@ -163,9 +165,11 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+      - name: Show Quality Gate Status
+        run: echo "Quality Gate status is ${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }}"
       - name: Fail the job if Quality Gate is not passed
-        if: steps.sonarqube-quality-gate-check.outputs.status != 'PASSED'
-        run: |-
+        if: steps.sonarqube-quality-gate-check.outputs.quality-gate-status != 'PASSED'
+        run: |
           echo "Quality Gate is not passed. Failing the job."
           exit 1
 #Build Artifacts
