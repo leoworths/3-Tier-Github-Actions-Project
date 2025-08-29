@@ -329,7 +329,7 @@ jobs:
           FRONTEND_IMAGE: ${{ needs.docker-build-frontend.outputs.image_name }}
           FRONTEND_TAG: ${{ needs.docker-build-frontend.outputs.image_tag }}
         run: |
-          sed -i "s|^\s*image:.*|image: $FRONTEND_IMAGE:$FRONTEND_TAG|g" k8s-prod/frontend.yaml
+          sed -i "s|image: .*|image: $FRONTEND_IMAGE:$FRONTEND_TAG|g" k8s-prod/frontend.yaml
           grep "image:" k8s-prod/frontend.yaml
           
 
@@ -338,7 +338,7 @@ jobs:
           BACKEND_IMAGE: ${{ needs.docker-build-backend.outputs.image_name }}
           BACKEND_TAG: ${{ needs.docker-build-backend.outputs.image_tag }}
         run: |
-          sed -i "s|^\s*image:.*|image: $BACKEND_IMAGE:$BACKEND_TAG|g" k8s-prod/backend.yaml
+          sed -i "s|image: .*|image: $BACKEND_IMAGE:$BACKEND_TAG|g" k8s-prod/backend.yaml
           grep "image:" k8s-prod/backend.yaml
           
       - name: Commit and push changes

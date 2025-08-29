@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: docker.io/leoworths/frontend:v1.0.4
+          image: ${{ vars.DOCKERHUB_USERNAME }}/${{github.event.repository.name }}-frontend:${{ github.sha }}
           ports:
             - containerPort: 80
 ---

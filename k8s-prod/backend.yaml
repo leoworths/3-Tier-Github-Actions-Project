@@ -35,7 +35,7 @@ spec:
       serviceAccountName: vault-auth
       containers:
         - name: backend
-          image: docker.io/leoworths/backend:v1.0.4
+          image: ${{ vars.DOCKERHUB_USERNAME }}/${{github.event.repository.name }}-backend:${{ github.sha }}
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
