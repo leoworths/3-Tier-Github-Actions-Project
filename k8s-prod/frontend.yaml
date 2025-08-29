@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ${{ vars.DOCKERHUB_USERNAME }}/${{github.event.repository.name }}-frontend:${{ github.sha }}
+          image: leoworths/3-tier-github-actions-project-frontend:sha-7e29372
           ports:
             - containerPort: 80
 ---
