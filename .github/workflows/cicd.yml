@@ -53,6 +53,8 @@ jobs:
     runs-on: self-hosted
     needs: [compile-frontend, compile-backend]
     steps:
+      - name: Clean gitleaks temp file
+        run: rm -f /tmp/gitleaks.tmp
       - name: Checkout code
         uses: actions/checkout@v4
         with:
