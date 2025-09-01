@@ -382,4 +382,4 @@ jobs:
           git add k8s-prod/frontend.yaml k8s-prod/backend.yaml
           git commit -m "ci: Update image tags [skip ci]" || echo "No changes to commit" 
           git push origin main
-#
+
