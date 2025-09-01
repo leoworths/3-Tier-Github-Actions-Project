@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   compile-frontend:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
           cd client
           npm ci
   compile-backend:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -50,7 +50,7 @@ jobs:
           npm ci 
 #check for security vulnerabilities
   gitleaks-scan:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [compile-frontend, compile-backend]
     steps:
       - name: Checkout code
@@ -72,7 +72,7 @@ jobs:
             gitleaks-client-report.json
 #check for security vulnerabilities with trivy
   trivy-file-scan:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: gitleaks-scan
     steps:
       - name: Checkout code
@@ -96,7 +96,7 @@ jobs:
 #sonarqube scan
 
   sonarQube-qualityGate-frontend:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: trivy-file-scan
     steps:
       - name: Checkout code
@@ -135,7 +135,7 @@ jobs:
           exit 1
 #sonarqube scan for backend
   sonarQube-qualityGate-backend:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: trivy-file-scan
     steps:
       - name: Checkout code
@@ -174,7 +174,7 @@ jobs:
           exit 1
 #Build Artifacts
   build-artifacts:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: sonarQube-qualityGate-frontend
     steps:
       - name: Checkout code
@@ -199,7 +199,7 @@ jobs:
           path: client/build
 #build docker images and push to dockerhub
   docker-build-frontend:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: build-artifacts
     env:
       IMAGE_TAG: ${{ github.sha }}
@@ -248,7 +248,7 @@ jobs:
           echo "image_tag=sha-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 #build backend docker image and push to dockerhub
   docker-build-backend:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: sonarQube-qualityGate-backend
     env:
       IMAGE_TAG: ${{ github.sha }}
@@ -276,7 +276,6 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: |
             type=sha,format=short
-            type=ref,event=branch
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
       - name: Build and push Docker image
@@ -293,7 +292,7 @@ jobs:
           echo "image_tag=sha-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 #Trivy scan frontend docker image
   trivy-image-scan-frontend:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: docker-build-frontend
     steps:
       - name: Checkout code
@@ -319,7 +318,7 @@ jobs:
           path: trivy-results.sarif
 #Trivy scan backend docker image
   trivy-image-scan-backend:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: docker-build-backend
     steps:
       - name: Checkout code
@@ -340,7 +339,7 @@ jobs:
           path: trivy-results.sarif
 #Update k8s manifests 
   update-k8s-manifests:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [docker-build-frontend, docker-build-backend]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
