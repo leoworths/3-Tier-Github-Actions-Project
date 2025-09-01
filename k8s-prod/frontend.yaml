@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: leoworths/3-tier-github-actions-project-frontend:sha-7e29372
+          image: leoworths/3-tier-github-actions-project-frontend:sha-90af9b6
           ports:
             - containerPort: 80
 ---

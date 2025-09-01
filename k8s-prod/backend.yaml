@@ -35,7 +35,7 @@ spec:
       serviceAccountName: vault-auth
       containers:
         - name: backend
-          image: leoworths/3-tier-github-actions-project-backend:sha-7e29372
+          image: leoworths/3-tier-github-actions-project-backend:sha-90af9b6
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
